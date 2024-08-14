@@ -1,21 +1,39 @@
 import streamlit as st
+import json
 from modules.api import current_model, fetch_model_list, load_model, unload_model, request_completion
 from modules.configs import load_config, save_config, save_load_config, load_load_config, save_parameters_config, load_parameters_config, get_default_parameters
 
+# Inits
 config = load_config()
 message = None
+progress = 0
+progress_bar = None
+response_iter = None
 
 # Streamlit configs
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="tabbyUI",
+    page_icon="🐈",
+    layout="wide",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "https://github.com/mushinbush"
+        }
+    )
 
 # Reducing whitespace on the top of the page
 st.markdown("""
     <style>
         .block-container{
             padding-top: 1rem;
-            padding-bottom: 0rem;
+            padding-bottom: 1rem;
             margin-top: 1rem;
         }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -62,17 +80,48 @@ with st.sidebar:
                 save_load_config(max_seq_len, gpu_split_auto, gpu_split_list, cache_mode_option)
                 st.success("Configuration saved successfully!")
 
+
+    # Model loading
     col1, col2 = st.columns(2)
 
     with col1:
         if st.button("Load Model", use_container_width=True):
             load_config = load_load_config()
-            message = load_model(url_input, api_key_input, model_list, load_config)
+            response_iter, error_message = load_model(url_input, api_key_input, model_list, load_config)
+            
+            if error_message:
+                message = ("error", error_message)
+            else:
+                progress = 0  # Initialize percentage
 
     with col2:
         if st.button("Unload Model", use_container_width=True):
             message = unload_model(url_input, api_key_input)
 
+    # Progess bar of loading model
+    if response_iter:
+        progress_bar = st.progress(progress)
+        finished = False
+
+        for line in response_iter:
+            if line:
+                data = json.loads(line.decode('utf-8').split('data: ')[1])
+                module = data['module']
+                modules = data['modules']
+                status = data['status']
+
+                progress = int((module / modules) * 100) # Process percentage
+                progress_bar.progress(progress)
+
+                if status == 'finished' and not finished:
+                    message = ("success", "Model loaded successfully!")
+                    finished = True
+                    break
+
+        if not finished:
+            message = ("error", "Model loading did not finish successfully.")
+
+    # Error handling
     if message:
         if message[0] == "success":
             st.success(message[1])
@@ -81,25 +130,28 @@ with st.sidebar:
 
 # Main page
 tab1, tab2 = st.tabs(["Completions", "Parameters"])
+
 with tab1:
     col1, col2 = st.columns(2)
 
-    with col1:
-        prompt = st.text_area(label="Input Box", height=700)
     with col2:
         result_area = st.empty()
-        result_area.markdown("")
-    if st.button("Start Completion"):
-        with col2:
-            result = ""
-            parameters = load_parameters_config()
+        result_area.write("")
+    
+    with col1:
+        prompt = st.text_area(label="Input Box", height=700)
 
+        if st.button("Start Completion"):
+            
+            parameters = load_parameters_config()
             result = prompt
+
             for chunk in request_completion(url_input, api_key_input, prompt, parameters):
                 result += chunk
-                result_area.markdown(result)
+                result_area.write(result)
 
 with tab2:
+
     parameters = load_parameters_config()
     col1, col2, col3, col4 = st.columns(4)
 
@@ -143,6 +195,7 @@ with tab2:
             }
             save_parameters_config(parameters)
             st.success("Parameters saved successfully!")
+
     with col2:
         if st.button("Reset to Default", use_container_width=True):
             save_parameters_config(get_default_parameters())

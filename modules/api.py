@@ -61,34 +61,13 @@ def load_model(url, api_key, model_id, config):
         "skip_queue": False
     }
     try:
-        with requests.post(api_url, headers=headers, json=payload, stream=True) as response:
-            message = None
-            if response.status_code == 200:
-                progress_bar = st.progress(0)
-                finished = False
-                for line in response.iter_lines():
-                    if line:
-                        data = json.loads(line.decode('utf-8').split('data: ')[1])
-                        module = data['module']
-                        modules = data['modules']
-                        status = data['status']
-                        
-                        # 計算進度百分比
-                        progress = int((module / modules) * 100)
-                        progress_bar.progress(progress)
-                        
-                        if status == 'finished' and not finished:
-                            message = ("success", "Model loaded successfully!")
-                            finished = True
-                            
-                if not finished:
-                    message = ("error", "Model loading did not finish successfully.")
-            else:
-                message = ("error", f"Request failed, status code: {response.status_code}")
-            
-            return message
-
+        response = requests.post(api_url, headers=headers, json=payload, stream=True)
         
+        if response.status_code == 200:
+            return response.iter_lines(), None
+        else:
+            return None, f"Request failed, status code: {response.status_code}"
+
     except Exception as e:
         st.error(f"Error: {e}")
         return None
