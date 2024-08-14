@@ -134,21 +134,14 @@ tab1, tab2 = st.tabs(["Completions", "Parameters"])
 with tab1:
     col1, col2 = st.columns(2)
 
-    with col2:
-        result_area = st.empty()
-        result_area.write("")
-    
     with col1:
         prompt = st.text_area(label="Input Box", height=700)
 
         if st.button("Start Completion"):
-            
             parameters = load_parameters_config()
-            result = prompt
-
-            for chunk in request_completion(url_input, api_key_input, prompt, parameters):
-                result += chunk
-                result_area.write(result)
+            
+            with col2:
+                st.write_stream(request_completion(url_input, api_key_input, prompt, parameters))
 
 with tab2:
 

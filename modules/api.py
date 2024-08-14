@@ -121,14 +121,13 @@ def request_completion(url, api_key, prompt, parameters):
         response = requests.post(api_url, headers=headers, json=payload, stream=True)
         response.raise_for_status()
 
-        # 逐行處理流式輸出的文本
-        for line in response.iter_lines():
+        yield prompt # add prompt first, write -> write_stream needed
+
+        for line in response.iter_lines(): # 逐行處理流式輸出的文本
             if line:
-                # 刪除 "data: " 開頭
-                line_content = line.decode('utf-8').replace("data: ", "")
+                line_content = line.decode('utf-8').replace("data: ", "") # 刪除 "data: " 開頭
                 if line_content.strip() != "[DONE]":
-                    # 解析JSON並取出"choices"內的"text"
-                    completion_data = json.loads(line_content)
+                    completion_data = json.loads(line_content) # 解析JSON並取出"choices"內的"text"
                     text = completion_data['choices'][0]['text']
                     yield text  # 使用yield以生成器方式返回結果
 
@@ -136,16 +135,7 @@ def request_completion(url, api_key, prompt, parameters):
         print(f"Request failed: {e}")
         yield ""
 
-
-
-
-
-
-
-
-
-
-
+# Completion additions
 '''
         "min_tokens": None,
         "generate_window": None,
