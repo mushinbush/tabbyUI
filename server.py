@@ -34,6 +34,11 @@ st.markdown("""
         .stDeployButton {display:none;}
         footer {visibility: hidden;}
         #stDecoration {display:none;}
+        .small-font {
+            font-size: 14px !important;
+            display: inline-block;
+            line-height: 0;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -134,6 +139,9 @@ tab1, tab2 = st.tabs(["Completions", "Parameters"])
 with tab1:
     col1, col2 = st.columns(2)
 
+    with col2:
+        st.markdown('<p class="small-font">Output Box</p>', unsafe_allow_html=True)
+        completionbox = st.container(height=700)
     with col1:
         prompt = st.text_area(label="Input Box", height=700)
 
@@ -141,7 +149,7 @@ with tab1:
             parameters = load_parameters_config()
             
             with col2:
-                st.write_stream(request_completion(url_input, api_key_input, prompt, parameters))
+                completionbox.write_stream(request_completion(url_input, api_key_input, prompt, parameters, False))
 
 with tab2:
 
