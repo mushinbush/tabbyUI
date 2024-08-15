@@ -61,12 +61,20 @@ with st.sidebar:
     model_list = st.selectbox("Select Model", options=fetch_model_list(url_input, api_key_input))
 
     @st.dialog("Advanced Configuration")
-    def advanced_config(max_seq_len):
-        st.write("Enter additional configuration options:")
-        st.session_state.max_cache_size = st.number_input("Max Cache Size", min_value=1, value=st.session_state.get("max_cache_size"), placeholder="Auto")
-        st.session_state.rope_scale = st.number_input("Rope Scale", min_value=0.0, value=st.session_state.get("rope_scale"), format="%.2f", placeholder="Auto")
-        st.session_state.rope_alpha = st.number_input("Rope Alpha", min_value=0.0, value=st.session_state.get("rope_alpha"), format="%.2f", placeholder="Auto")
-        
+    def advanced_config():
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.session_state.max_cache_size = st.number_input("Max Cache Size", min_value=1, value=st.session_state.get("max_cache_size"), placeholder="Auto")
+        with col2:
+            st.session_state.rope_scale = st.number_input("Rope Scale", min_value=0.0, value=st.session_state.get("rope_scale"), format="%.2f", placeholder="Auto")
+        with col3:
+            st.session_state.rope_alpha = st.number_input("Rope Alpha", min_value=0.0, value=st.session_state.get("rope_alpha"), format="%.2f", placeholder="Auto")
+        st.session_state.draft_model = st.selectbox("Select Draft Model", options=fetch_draft_model_list(url_input, api_key_input))
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.draft_rope_scale = st.number_input("Draft Rope Scale", min_value=0.0, value=st.session_state.get("draft_rope_scale"), format="%.2f", placeholder="Auto")
+        with col2:
+            st.session_state.draft_rope_alpha = st.number_input("Draft Alpha Scale", min_value=0.0, value=st.session_state.get("draft_rope_alpha"), format="%.2f", placeholder="Auto")
         if st.button("Confirm"):
             st.rerun()
 
@@ -84,7 +92,7 @@ with st.sidebar:
         
         with col2:
             if st.button("Advanced", use_container_width=True):
-                advanced_config(max_seq_len)
+                advanced_config()
 
         if save_button:
             if gpu_split.strip(): # valid split input
@@ -107,7 +115,10 @@ with st.sidebar:
                     cache_mode_option,
                     st.session_state.get("max_cache_size"),
                     st.session_state.get("rope_scale"),
-                    st.session_state.get("rope_alpha")
+                    st.session_state.get("rope_alpha"),
+                    st.session_state.get("draft_rope_scale"),
+                    st.session_state.get("draft_rope_alpha"),
+                    st.session_state.get("draft_model")
                 )
                 st.success("Configuration saved successfully!")
 

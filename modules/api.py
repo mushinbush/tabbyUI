@@ -35,6 +35,23 @@ def fetch_model_list(url, api_key):
         st.error(f"Error: {e}")
         return []
     
+def fetch_draft_model_list(url, api_key):
+    api_url = f"{url}/v1/model/draft/list"
+    headers = {
+        "X-Api-Key": api_key
+    }
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return [model["id"] for model in data.get("data", [])]
+        else:
+            st.error(f"Request failed, status code: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"Error: {e}")
+        return []
+    
 def load_model(url, api_key, model_id, config):
     api_url = f"{url}/v1/model/load"
     headers = {
@@ -42,6 +59,8 @@ def load_model(url, api_key, model_id, config):
         "Authorization": "",
         "x-admin-key": api_key
     }
+    draft_model = config.get("Draft Model")
+
     payload = {
         "name": model_id,
         "max_seq_len": config.get("Max Seq Len", 4096),
@@ -57,8 +76,13 @@ def load_model(url, api_key, model_id, config):
         "prompt_template": None,
         "num_experts_per_token": None,
         "fasttensors": None,
-        "draft": None,
-        "skip_queue": False
+        "skip_queue": False,
+        "draft": {
+            "draft_model_name": draft_model,
+            "draft_rope_scale": config.get("Draft Rope Scale"),
+            "draft_rope_alpha": config.get("Draft Rope Scale"),
+            "draft_cache_mode": config.get("Cache Mode")
+        } if draft_model else None
     }
     try:
         response = requests.post(api_url, headers=headers, json=payload, stream=True)
