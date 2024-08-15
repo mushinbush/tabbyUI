@@ -60,15 +60,33 @@ with st.sidebar:
 
     model_list = st.selectbox("Select Model", options=fetch_model_list(url_input, api_key_input))
 
+    @st.dialog("Advanced Configuration")
+    def advanced_config(max_seq_len):
+        st.write("Enter additional configuration options:")
+        st.session_state.max_cache_size = st.number_input("Max Cache Size", min_value=1, value=st.session_state.get("max_cache_size"), placeholder="Auto")
+        st.session_state.rope_scale = st.number_input("Rope Scale", min_value=0.0, value=st.session_state.get("rope_scale"), format="%.2f", placeholder="Auto")
+        st.session_state.rope_alpha = st.number_input("Rope Alpha", min_value=0.0, value=st.session_state.get("rope_alpha"), format="%.2f", placeholder="Auto")
+        
+        if st.button("Confirm"):
+            st.rerun()
+
     with st.expander("Configuration"):
         load_config = load_load_config()
         max_seq_len = st.number_input("Max Seq Len", min_value=1, value=load_config.get("Max Seq Len", 4096))
         gpu_split_auto = True
         valid_split_input = True
-        gpu_split = st.text_input("GPU Split (comma-separated, leave blank for Auto-Split)", ", ".join(map(str, load_config.get("GPU Split", ""))))
+        gpu_split = st.text_input("GPU Split", ", ".join(map(str, load_config.get("GPU Split", ""))), placeholder = "Auto")
         cache_mode_option = st.selectbox("Cache Mode", options=["FP16", "Q8", "Q6", "Q4"], index=["FP16", "Q8", "Q6", "Q4"].index(load_config.get("Cache Mode", "FP16")))
         
-        if st.button("Save Configuration", use_container_width=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            save_button = st.button("Save Config", use_container_width=True)
+        
+        with col2:
+            if st.button("Advanced", use_container_width=True):
+                advanced_config(max_seq_len)
+
+        if save_button:
             if gpu_split.strip(): # valid split input
                 try:
                     gpu_split_list = [float(x.strip()) for x in gpu_split.split(",")]
@@ -82,7 +100,15 @@ with st.sidebar:
                 gpu_split_auto = True
 
             if valid_split_input:
-                save_load_config(max_seq_len, gpu_split_auto, gpu_split_list, cache_mode_option)
+                save_load_config(
+                    max_seq_len, 
+                    gpu_split_auto, 
+                    gpu_split_list, 
+                    cache_mode_option,
+                    st.session_state.get("max_cache_size"),
+                    st.session_state.get("rope_scale"),
+                    st.session_state.get("rope_alpha")
+                )
                 st.success("Configuration saved successfully!")
 
 

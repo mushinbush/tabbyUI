@@ -22,12 +22,15 @@ def load_load_config():
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-def save_load_config(max_seq_len, gpu_split_auto, gpu_split, cache_mode):
+def save_load_config(max_seq_len, gpu_split_auto, gpu_split, cache_mode, max_cache_size, rope_scale, rope_alpha):
     config = {
         "Max Seq Len": max_seq_len,
         "GPU Split Auto": gpu_split_auto,
         "GPU Split": gpu_split,
-        "Cache Mode": cache_mode
+        "Cache Mode": cache_mode,
+        "Max Cache Size": max_cache_size,
+        "Rope Scale": rope_scale,
+        "Rope Alpha": rope_alpha
     }
     with open(load_config_file, 'w') as config_file:
         json.dump(config, config_file)
