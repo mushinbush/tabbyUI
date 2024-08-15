@@ -91,14 +91,35 @@ def unload_model(url, api_key):
         st.error(f"Error: {e}")
         return False
     
-def request_completion(url, api_key, prompt, parameters):
+def request_completion(url, api_key, prompt, parameters, chat):
     api_url = f"{url}/v1/completions"
     headers = {
         "X-Api-Key": api_key,
         "Authorization": "",
         "x-admin-key": api_key
     }
-    payload = {
+    payload = param_payload(parameters,prompt)
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, stream=True)
+        response.raise_for_status()
+
+        if chat == False:
+            yield prompt # add prompt first, write -> write_stream needed
+
+        for line in response.iter_lines(): # 逐行處理流式輸出的文本
+            if line:
+                line_content = line.decode('utf-8').replace("data: ", "") # 刪除 "data: " 開頭
+                if line_content.strip() != "[DONE]":
+                    completion_data = json.loads(line_content) # 解析JSON並取出"choices"內的"text"
+                    text = completion_data['choices'][0]['text']
+                    yield text  # 使用yield以生成器方式返回結果
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        yield ""
+
+def param_payload(parameters,prompt):
+    return {
         "prompt": prompt,
         "max_tokens": 512,
         "stream": True,
@@ -117,23 +138,6 @@ def request_completion(url, api_key, prompt, parameters):
         "penalty_range": parameters.get("rep_pen_range", None),
         "repetition_decay": parameters.get("rep_pen_decay", None),
     }
-    try:
-        response = requests.post(api_url, headers=headers, json=payload, stream=True)
-        response.raise_for_status()
-
-        yield prompt # add prompt first, write -> write_stream needed
-
-        for line in response.iter_lines(): # 逐行處理流式輸出的文本
-            if line:
-                line_content = line.decode('utf-8').replace("data: ", "") # 刪除 "data: " 開頭
-                if line_content.strip() != "[DONE]":
-                    completion_data = json.loads(line_content) # 解析JSON並取出"choices"內的"text"
-                    text = completion_data['choices'][0]['text']
-                    yield text  # 使用yield以生成器方式返回結果
-
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
-        yield ""
 
 # Completion additions
 '''
