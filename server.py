@@ -1,7 +1,7 @@
 import streamlit as st
 import json
-from modules.api import current_model, fetch_model_list, load_model, unload_model, request_completion
-from modules.configs import load_config, save_config, save_load_config, load_load_config, save_parameters_config, load_parameters_config, get_default_parameters
+from modules.api import *
+from modules.configs import *
 
 # Inits
 config = load_config()
