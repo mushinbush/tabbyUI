@@ -4,7 +4,8 @@ import requests, json
 def current_model(url, api_key):
     api_url = f"{url}/v1/model"
     headers = {
-        "X-Api-Key": api_key
+        "x-api-key": api_key,
+        "Authorization": f"Bearer {api_key}"
     }
     try:
         response = requests.get(api_url, headers=headers)
@@ -21,7 +22,8 @@ def current_model(url, api_key):
 def fetch_model_list(url, api_key):
     api_url = f"{url}/v1/model/list"
     headers = {
-        "X-Api-Key": api_key
+        "x-api-key": api_key,
+        "Authorization": f"Bearer {api_key}"
     }
     try:
         response = requests.get(api_url, headers=headers)
@@ -38,7 +40,8 @@ def fetch_model_list(url, api_key):
 def fetch_draft_model_list(url, api_key):
     api_url = f"{url}/v1/model/draft/list"
     headers = {
-        "X-Api-Key": api_key
+        "x-api-key": api_key,
+        "Authorization": f"Bearer {api_key}"
     }
     try:
         response = requests.get(api_url, headers=headers)
@@ -55,9 +58,8 @@ def fetch_draft_model_list(url, api_key):
 def load_model(url, api_key, model_id, config):
     api_url = f"{url}/v1/model/load"
     headers = {
-        "X-Api-Key": api_key,
-        "Authorization": "",
-        "x-admin-key": api_key
+        "x-admin-key": api_key,
+        "Authorization": ""
     }
     draft_model = config.get("Draft Model")
 
@@ -99,9 +101,8 @@ def load_model(url, api_key, model_id, config):
 def unload_model(url, api_key):
     api_url = f"{url}/v1/model/unload"
     headers = {
-        "X-Api-Key": api_key,
-        "Authorization": "",
-        "x-admin-key": api_key
+        "x-admin-key": api_key,
+        "Authorization": ""
     }
     try:
         response = requests.post(api_url, headers=headers)
@@ -118,9 +119,8 @@ def unload_model(url, api_key):
 def request_completion(url, api_key, prompt, parameters, chat):
     api_url = f"{url}/v1/completions"
     headers = {
-        "X-Api-Key": api_key,
-        "Authorization": "",
-        "x-admin-key": api_key
+        "x-api-key": api_key,
+        "Authorization": f"Bearer {api_key}",
     }
     payload = param_payload(parameters,prompt)
     try:
