@@ -84,8 +84,11 @@ with st.sidebar:
         gpu_split_auto = True
         valid_split_input = True
         gpu_split = st.text_input("GPU Split", ", ".join(map(str, load_config.get("GPU Split", ""))), placeholder = "Auto")
-        cache_mode_option = st.selectbox("Cache Mode", options=["FP16", "Q8", "Q6", "Q4"], index=["FP16", "Q8", "Q6", "Q4"].index(load_config.get("Cache Mode", "FP16")))
-        
+        col1, col2 = st.columns(2)
+        with col1:
+            cache_mode_option = st.selectbox("Cache Mode", options=["FP16", "Q8", "Q6", "Q4"], index=["FP16", "Q8", "Q6", "Q4"].index(load_config.get("Cache Mode", "FP16")))
+        with col2:
+            tensor_parallel_option = st.selectbox("Tensor Parallel", options=["Off", "On"], index=["Off", "On"].index("On" if load_config.get("Tensor Parallel", True) else "Off"))
         col1, col2 = st.columns(2)
         with col1:
             save_button = st.button("Save Config", use_container_width=True)
@@ -113,6 +116,7 @@ with st.sidebar:
                     gpu_split_auto, 
                     gpu_split_list, 
                     cache_mode_option,
+                    tensor_parallel_option,
                     st.session_state.get("max_cache_size"),
                     st.session_state.get("rope_scale"),
                     st.session_state.get("rope_alpha"),

@@ -22,7 +22,7 @@ def load_load_config():
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-def save_load_config(max_seq_len, gpu_split_auto, gpu_split, cache_mode, max_cache_size, rope_scale, rope_alpha, draft_rope_scale, draft_rope_alpha, draft_model):
+def save_load_config(max_seq_len, gpu_split_auto, gpu_split, cache_mode, tensor_parallel, max_cache_size, rope_scale, rope_alpha, draft_rope_scale, draft_rope_alpha, draft_model):
     config = {
         "Max Seq Len": max_seq_len,
         "GPU Split Auto": gpu_split_auto,
@@ -33,7 +33,8 @@ def save_load_config(max_seq_len, gpu_split_auto, gpu_split, cache_mode, max_cac
         "Rope Alpha": rope_alpha,
         "Draft Rope Scale": draft_rope_scale,
         "Draft Rope Alpha": draft_rope_alpha,
-        "Draft Model": draft_model
+        "Draft Model": draft_model,
+        "Tensor Parallel": tensor_parallel
     }
     with open(load_config_file, 'w') as config_file:
         json.dump(config, config_file)

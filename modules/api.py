@@ -47,7 +47,8 @@ def fetch_draft_model_list(url, api_key):
         response = requests.get(api_url, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            return [model["id"] for model in data.get("data", [])]
+            models = [model["id"] for model in data.get("data", [])]
+            return [None] + models if models else [None]
         else:
             st.error(f"Request failed, status code: {response.status_code}")
             return []
@@ -70,6 +71,7 @@ def load_model(url, api_key, model_id, config):
         "cache_size": config.get("Cache Size", None),
         "gpu_split_auto": config.get("GPU Split Auto", True),
         "autosplit_reserve": None,
+        "tensor_parallel": config.get("Tensor Parallel", None),
         "gpu_split": config.get("GPU Split", None),
         "rope_scale": config.get("Rope Scale", None),
         "rope_alpha": config.get("Rope Alpha", None),
