@@ -144,6 +144,43 @@ def request_completion(url, api_key, prompt, parameters, chat):
         print(f"Request failed: {e}")
         yield ""
 
+def request_chat_completion(url, api_key, message, parameters, stream):
+    api_url = f"{url}/v1/chat/completions"  # Adjust the endpoint for chat completions
+    headers = {
+        "x-api-key": api_key,
+        "Authorization": f"Bearer {api_key}",
+    }
+    payload = param_payload(parameters, message)
+    
+    # Setting specific fields for chat-based completion
+    payload["messages"] = message
+    payload["prompt_template"] = None
+    payload["add_generation_prompt"] = True
+    payload["template_vars"] = {}
+    payload["response_prefix"] = None
+    payload["tools"] = None
+    payload["functions"] = None
+
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, stream=True)
+        response.raise_for_status()
+
+        for line in response.iter_lines():
+            if line:
+                line_content = line.decode('utf-8').replace("data: ", "")
+                if line_content.strip() != "[DONE]":
+                    try:
+                        completion_data = json.loads(line_content)
+                        text = completion_data.get('choices', [{}])[0].get('delta', {}).get('content', '')
+                        yield text
+                    except (json.JSONDecodeError, KeyError) as e:
+                        print(f"Error processing line: {e}")
+                        yield ""
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        yield ""
+
 def param_payload(parameters,prompt):
     return {
         "prompt": prompt,

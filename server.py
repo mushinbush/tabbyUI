@@ -88,7 +88,7 @@ with st.sidebar:
         with col1:
             cache_mode_option = st.selectbox("Cache Mode", options=["FP16", "Q8", "Q6", "Q4"], index=["FP16", "Q8", "Q6", "Q4"].index(load_config.get("Cache Mode", "FP16")))
         with col2:
-            tensor_parallel_option = st.selectbox("Tensor Parallel", options=["Off", "On"], index=["Off", "On"].index("On" if load_config.get("Tensor Parallel", True) else "Off"))
+            tensor_parallel_option = st.selectbox("Tensor Parallel", options=["Off", "On"], index=["Off", "On"].index(load_config.get("Tensor Parallel", "False")))
         col1, col2 = st.columns(2)
         with col1:
             save_button = st.button("Save Config", use_container_width=True)
@@ -175,9 +175,41 @@ with st.sidebar:
             st.error(message[1])
 
 # Main page
-tab1, tab2 = st.tabs(["Completions", "Parameters"])
+tab1, tab2, tab3 = st.tabs(["Chat Completions", "Completions", "Parameters"])
 
 with tab1:
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display previous messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Handle new user input
+    if prompt := st.chat_input("Say Something!"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            stream = request_chat_completion(
+                url_input,
+                api_key_input,
+                message=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                parameters = load_parameters_config(),
+                stream=True
+            )
+            response = st.write_stream(stream)
+
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
+with tab2:
+
     col1, col2 = st.columns(2)
 
     with col2:
@@ -192,7 +224,7 @@ with tab1:
             with col2:
                 completionbox.write_stream(request_completion(url_input, api_key_input, prompt, parameters, False))
 
-with tab2:
+with tab3:
 
     parameters = load_parameters_config()
     col1, col2, col3, col4 = st.columns(4)
