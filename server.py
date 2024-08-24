@@ -179,34 +179,37 @@ tab1, tab2, tab3 = st.tabs(["Chat Completions", "Completions", "Parameters"])
 
 with tab1:
 
+    chat_container = st.container(height=500)
+    input_container = st.empty()
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Display previous messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    with chat_container:
+        for message in st.session_state.messages: # Display previous messages in the chat container
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    # Handle new user input
-    if prompt := st.chat_input("Say Something!"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            stream = request_chat_completion(
-                url_input,
-                api_key_input,
-                message=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                parameters = load_parameters_config(),
-                stream=True
-            )
-            response = st.write_stream(stream)
-
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    with input_container:
+        if prompt := st.chat_input("Say Something!"): # Handle new user input in the input container
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            
+            with chat_container:
+                with st.chat_message("user"): # Update the chat container with the new message
+                    st.markdown(prompt)
+                with st.chat_message("assistant"):
+                    stream = request_chat_completion(
+                        url_input,
+                        api_key_input,
+                        message=[
+                            {"role": m["role"], "content": m["content"]}
+                            for m in st.session_state.messages
+                        ],
+                        parameters = load_parameters_config(),
+                        stream=True
+                    )
+                    response = st.write_stream(stream)
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
 with tab2:
 
