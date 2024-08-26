@@ -11,10 +11,10 @@ if not exist "venv\" (
     echo Installing dependencies from requirements.txt
     call pip install -r requirements.txt
     echo Done!
-    call streamlit run server.py --server.headless true
+    call streamlit run server.py
     pause
 ) else (
     call .\venv\Scripts\activate.bat
-    call streamlit run server.py --server.headless true
+    call streamlit run server.py
     pause
 )
