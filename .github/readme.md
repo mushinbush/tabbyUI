@@ -1,4 +1,11 @@
+⚠️ **DEPRECATED**
 
+This repository is no longer maintained.  
+
+The upstream API seems to have changed its implementation of Streaming Completion, which likely breaks the functionality.  
+As a result, and since I’ve switched to a different solution, this repository is no longer functional.  
+
+---
 
 ## Description:
 
